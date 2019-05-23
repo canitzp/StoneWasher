@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "isi",
+    "igi",
+    "ici"
+  ],
+  "key": {
+    "i": {
+      "tag": "forge:ingots/iron"
+    },
+    "s": {
+      "tag": "minecraft:sand"
+    },
+    "g": {
+      "item": "minecraft:gravel"
+    },
+    "c": {
+      "tag": "forge:cobblestone"
+    }
+  },
+  "result": {
+    "item": "stonewasher:manualstonewasher"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "stonewasher:blocks/manual_stonewasher_updown",
+    "up": "stonewasher:blocks/manual_stonewasher_updown",
+    "north": "stonewasher:blocks/manual_stonewasher_front",
+    "south": "stonewasher:blocks/manual_stonewasher_back",
+    "east": "stonewasher:blocks/manual_stonewasher_side",
+    "west": "stonewasher:blocks/manual_stonewasher_side",
+    "particle": "stonewasher:blocks/manual_stonewasher_updown"
+  }
+}
