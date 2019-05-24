@@ -8,7 +8,7 @@ import net.minecraft.item.ItemStack;
 public class Util {
 
     public static boolean stacksEqualIgnoreCount(ItemStack a, ItemStack b){
-        return a.isItemEqual(b) && ItemStack.areItemStackTagsEqual(a, b);
+        return (a.isEmpty() && b.isEmpty()) || a.isItemEqual(b) && ItemStack.areItemStackTagsEqual(a, b);
     }
 
     public static boolean hasStackHigherOrEqualCountAndIsEqual(ItemStack higher, ItemStack base){

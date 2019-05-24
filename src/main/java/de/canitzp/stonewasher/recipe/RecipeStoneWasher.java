@@ -2,16 +2,16 @@ package de.canitzp.stonewasher.recipe;
 
 import de.canitzp.stonewasher.util.Util;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 import net.minecraftforge.registries.IForgeRegistry;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -21,7 +21,7 @@ public class RecipeStoneWasher extends ForgeRegistryEntry<RecipeStoneWasher> imp
 
     public static IForgeRegistry<RecipeStoneWasher> REGISTRY;
     
-    private static Map<ItemStack, Integer> ORE_WEIGHT_MAP = new HashMap<>();
+    private static Map<ItemStack, List<FilteredChance>> ORE_WEIGHT_MAP = new HashMap<>();
 
     private ItemStack input;
     private NonNullList<OutputStack> outputStacks = NonNullList.create();
@@ -29,12 +29,25 @@ public class RecipeStoneWasher extends ForgeRegistryEntry<RecipeStoneWasher> imp
     private int oreWeight = 0;
     
     static {
-        addOre(new ItemStack(Blocks.COAL_ORE), 0, 128, 17);
-        addOre(new ItemStack(Blocks.IRON_ORE), 0, 64, 9);
-        addOre(new ItemStack(Blocks.GOLD_ORE), 0, 32, 9);
-        addOre(new ItemStack(Blocks.REDSTONE_ORE), 0, 16, 8);
-        addOre(new ItemStack(Blocks.DIAMOND_ORE), 0, 16, 8);
-        addOre(new ItemStack(Blocks.LAPIS_ORE), 0, 23, 7);
+        // Values according to BeachBiome.java
+        addOre(new ItemStack(Blocks.COAL_ORE),
+            filteredChances -> filteredChances.add(new FilteredChance(ItemStack.EMPTY, 0, 128, 17, 20))
+        );
+        addOre(new ItemStack(Blocks.IRON_ORE),
+            filteredChances -> filteredChances.add(new FilteredChance(ItemStack.EMPTY, 0, 64, 9, 20))
+        );
+        addOre(new ItemStack(Blocks.GOLD_ORE),
+            filteredChances -> filteredChances.add(new FilteredChance(ItemStack.EMPTY, 0, 32, 9, 2))
+        );
+        addOre(new ItemStack(Blocks.REDSTONE_ORE),
+            filteredChances -> filteredChances.add(new FilteredChance(ItemStack.EMPTY, 0, 16, 8, 8))
+        );
+        addOre(new ItemStack(Blocks.DIAMOND_ORE),
+            filteredChances -> filteredChances.add(new FilteredChance(ItemStack.EMPTY, 0, 16, 8, 1))
+        );
+        addOre(new ItemStack(Blocks.LAPIS_ORE),
+            filteredChances -> filteredChances.add(new FilteredChance(ItemStack.EMPTY, 0, 23, 7, 1))
+        );
     }
     
     public RecipeStoneWasher(ItemStack input, Consumer<NonNullList<OutputStack>> outputStacks){
@@ -71,14 +84,32 @@ public class RecipeStoneWasher extends ForgeRegistryEntry<RecipeStoneWasher> imp
         return input;
     }
 
-    public NonNullList<OutputStack> getOutputStacks() {
+    public NonNullList<OutputStack> getOutputStacks(ItemStack filter) {
         if(this.oreWeight > 0){
             NonNullList<OutputStack> ret = NonNullList.create();
             ret.addAll(this.outputStacks);
+            
+            Map<ItemStack, Integer> filteredWeight = new HashMap<>();
     
-            int allOreWeight = ORE_WEIGHT_MAP.values().stream().mapToInt(i -> i).sum();
+            for(Map.Entry<ItemStack, List<FilteredChance>> entry : ORE_WEIGHT_MAP.entrySet()){
+                for(FilteredChance chance : entry.getValue()){
+                    if(Util.stacksEqualIgnoreCount(chance.getFilter(), filter)){
+                        filteredWeight.put(entry.getKey(), chance.getWeight());
+                        break;
+                    }
+                }
+                // when no filter applies then use ItemStack.EMPTY as filter if it exists, but decrease the chances by 3/4
+                for(FilteredChance chance : entry.getValue()){
+                    if(chance.getFilter().isEmpty()){
+                        filteredWeight.put(entry.getKey(), Math.round(chance.getWeight() * 0.25F));
+                        break;
+                    }
+                }
+            }
+            
+            int allOreWeight = filteredWeight.values().stream().mapToInt(i -> i).sum();
             float multiplier = this.oreWeight / (allOreWeight * 1.0F);
-            ORE_WEIGHT_MAP.forEach((key, value) -> ret.add(new OutputStack(key, Math.round(value * multiplier))));
+            filteredWeight.forEach((key, value) -> ret.add(new OutputStack(key, Math.round(value * multiplier))));
             
             return ret;
         }
@@ -99,12 +130,10 @@ public class RecipeStoneWasher extends ForgeRegistryEntry<RecipeStoneWasher> imp
         return neededProgress;
     }
     
-    public static void addOre(ItemStack ore, int minY, int maxY, int veinSize){
-        if(minY > maxY){
-            throw new IllegalArgumentException("minY has to be smaller than maxY!");
-        } else {
-            ORE_WEIGHT_MAP.put(ore, maxY - minY * veinSize);
-        }
+    public static void addOre(ItemStack ore, Consumer<List<FilteredChance>> consumer){
+        List<FilteredChance> filteredOres = ORE_WEIGHT_MAP.getOrDefault(ore, new ArrayList<>());
+        consumer.accept(filteredOres);
+        ORE_WEIGHT_MAP.put(ore, filteredOres);
     }
 
     public static class OutputStack{
@@ -128,6 +157,35 @@ public class RecipeStoneWasher extends ForgeRegistryEntry<RecipeStoneWasher> imp
         public String toString(){
             return String.format("OutputStack{weight: '%d', stack: '%s'}", this.weight, this.stack.toString());
         }
+    }
+    
+    public static class FilteredChance {
+        @Nonnull private ItemStack filter;
+        private int weight;
+    
+        public FilteredChance(@Nonnull ItemStack filter, int weight){
+            this.filter = filter;
+            this.weight = weight;
+        }
+    
+        public FilteredChance(@Nonnull ItemStack filter, int minY, int maxY, int veinSize, int count){
+            if(minY > maxY){
+                throw new IllegalArgumentException("minY has to be smaller than maxY!");
+            } else {
+                this.filter = filter;
+                this.weight = maxY - minY * veinSize * count;
+            }
+        }
+    
+        @Nonnull
+        public ItemStack getFilter(){
+            return filter;
+        }
+    
+        public int getWeight(){
+            return weight;
+        }
+    
     }
     
 }

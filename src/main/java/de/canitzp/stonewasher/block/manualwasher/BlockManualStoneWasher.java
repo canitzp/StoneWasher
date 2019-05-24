@@ -12,6 +12,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
@@ -30,7 +31,12 @@ public class BlockManualStoneWasher extends BlockContainer{
         this.setRegistryName(StoneWasher.MODID, "manualstonewasher");
         this.setDefaultState(this.getStateContainer().getBaseState().with(BlockFurnace.FACING, EnumFacing.NORTH));
     }
-
+    
+    @Override
+    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items){
+        super.fillItemGroup(group, items);
+    }
+    
     @Nonnull
     @Override
     public EnumBlockRenderType getRenderType(IBlockState state) {

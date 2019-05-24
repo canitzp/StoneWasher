@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "stonewasher:blocks/stuffholder_updown",
+    "up": "stonewasher:blocks/stuffholder_updown",
+    "north": "stonewasher:blocks/stuffholder_side",
+    "south": "stonewasher:blocks/stuffholder_side",
+    "east": "stonewasher:blocks/stuffholder_side",
+    "west": "stonewasher:blocks/stuffholder_side",
+    "particle": "stonewasher:blocks/stuffholder_side"
+  }
+}

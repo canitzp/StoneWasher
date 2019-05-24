@@ -7,6 +7,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -35,7 +36,15 @@ public class TileManualStoneWasher extends TileEntity implements IInteractionObj
 
     private ResourceLocation currentRecipe;
     private int progress;
-    public InventoryBasicSided inventory = new InventoryBasicSided(new TextComponentString("manualstonewasher"), 2)
+    public InventoryBasicSided inventory = new InventoryBasicSided(new TextComponentString("manualstonewasher"), 2){
+        @Override
+        public void setInventorySlotContents(int index, ItemStack stack){
+            super.setInventorySlotContents(index, stack);
+            if(index == 0 && !stack.isEmpty()){
+                checkStatus();
+            }
+        }
+    }
         .addInsertSlot(0, EnumFacing.UP, EnumFacing.NORTH, EnumFacing.SOUTH, EnumFacing.EAST, EnumFacing.WEST)
         .addExtractSlot(1, EnumFacing.DOWN);
     
@@ -75,6 +84,14 @@ public class TileManualStoneWasher extends TileEntity implements IInteractionObj
     @Override
     public ITextComponent getCustomName(){
         return null;
+    }
+    
+    public int getProgress(){
+        return progress;
+    }
+    
+    public ResourceLocation getCurrentRecipe(){
+        return currentRecipe;
     }
     
     @Override
@@ -205,16 +222,18 @@ public class TileManualStoneWasher extends TileEntity implements IInteractionObj
                 this.progress = 0;
             }
         }
-        for(EntityPlayer player : this.world.playerEntities){
-            if(player instanceof EntityPlayerMP && this.getDistanceSq(player.posX, player.posY, player.posZ) <= this.getMaxRenderDistanceSquared()){
-                ((EntityPlayerMP) player).connection.sendPacket(this.getUpdatePacket());
+        if(this.world != null && this.world.playerEntities != null){
+            for(EntityPlayer player : this.world.playerEntities){
+                if(player instanceof EntityPlayerMP && this.getDistanceSq(player.posX, player.posY, player.posZ) <= this.getMaxRenderDistanceSquared()){
+                    ((EntityPlayerMP) player).connection.sendPacket(this.getUpdatePacket());
+                }
             }
         }
     }
     
     // this method returns the output stack, based on the weight they have
     private ItemStack getRecipeOutput(RecipeStoneWasher recipe){
-        List<RecipeStoneWasher.OutputStack> list = recipe.getOutputStacks();
+        List<RecipeStoneWasher.OutputStack> list = recipe.getOutputStacks(ItemStack.EMPTY);
         Collections.shuffle(list);
         int sum = list.stream().mapToInt(RecipeStoneWasher.OutputStack::getWeight).sum();
         int rnd = this.world.getRandom().nextInt(sum + 1);
@@ -224,7 +243,7 @@ public class TileManualStoneWasher extends TileEntity implements IInteractionObj
                 return outputStack.getStack().copy();
             }
         }
-        System.out.println("Oh no no item stack available!!!" + recipe.getOutputStacks());
+        System.out.println("Oh no no item stack available!!!" + list);
         return ItemStack.EMPTY;
     }
     

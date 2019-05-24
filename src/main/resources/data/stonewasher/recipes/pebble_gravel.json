@@ -1,0 +1,20 @@
+{
+  "type": "crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "stonewasher:stonepebble"
+    },
+    {
+      "item": "stonewasher:stonepebble"
+    },
+    {
+      "item": "stonewasher:stonepebble"
+    },
+    {
+      "item": "stonewasher:stonepebble"
+    }
+  ],
+  "result": {
+    "item": "minecraft:gravel"
+  }
+}

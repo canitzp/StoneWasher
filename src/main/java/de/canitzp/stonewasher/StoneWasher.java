@@ -9,6 +9,7 @@ import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
@@ -29,7 +30,14 @@ public class StoneWasher{
     
     public static final String MODID = "stonewasher";
     private static final Logger LOGGER = LogManager.getLogger("StoneWasher");
-
+    
+    public static ItemGroup STONEWASHER_GROUP = new ItemGroup(MODID){
+        @Override
+        public ItemStack createIcon(){
+            return new ItemStack(RegistryEvents.manualStoneWasher);
+        }
+    };
+    
     public StoneWasher() {
         RecipeStoneWasher.REGISTRY = new RegistryBuilder<RecipeStoneWasher>()
                 .setName(new ResourceLocation(MODID, "recipes"))
@@ -57,9 +65,9 @@ public class StoneWasher{
         public static BlockManualStoneWasher manualStoneWasher = new BlockManualStoneWasher();
         public static BlockStuffHolder stuffHolder = new BlockStuffHolder();
         
-        public static ItemBlock manualStoneWasherItem = new ItemBlock(manualStoneWasher, new Item.Properties());
-        public static ItemBlock stuffHolderItem = new ItemBlock(stuffHolder, new Item.Properties());
-        public static Item stonePebble = new Item(new Item.Properties()).setRegistryName(MODID, "stonepebble");
+        public static ItemBlock manualStoneWasherItem = new ItemBlock(manualStoneWasher, new Item.Properties().group(STONEWASHER_GROUP));
+        public static ItemBlock stuffHolderItem = new ItemBlock(stuffHolder, new Item.Properties().group(STONEWASHER_GROUP));
+        public static Item stonePebble = new Item(new Item.Properties().group(STONEWASHER_GROUP)).setRegistryName(MODID, "stonepebble");
         
         public static TileEntityType<TileManualStoneWasher> manualStoneWasherTileType = TileEntityType.register("manualstonewasher", TileEntityType.Builder.create(TileManualStoneWasher::new));
         public static TileEntityType<TileStuffHolder> stuffHolderTileType = TileEntityType.register("stuffholder", TileEntityType.Builder.create(TileStuffHolder::new));
@@ -104,7 +112,7 @@ public class StoneWasher{
             registry.register(new RecipeStoneWasher(
                 new ItemStack(Blocks.COBBLESTONE),
                 outputStacks -> {
-                    outputStacks.add(new RecipeStoneWasher.OutputStack(new ItemStack(stonePebble), 500));
+                    outputStacks.add(new RecipeStoneWasher.OutputStack(new ItemStack(stonePebble), 9500));
                 })
                 .setNeededProgress(10)
                 .setUseOreWeight(500)
